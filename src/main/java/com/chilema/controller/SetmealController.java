@@ -17,11 +17,15 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
@@ -41,6 +45,8 @@ public class SetmealController {
     private SetmealDishService setmealDishService;
     @Resource
     private CategoryService categoryService;
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     @Resource
     private DishService dishService;
@@ -92,6 +98,13 @@ public class SetmealController {
     @ApiOperation("(批量)起售（停售）功能")
     @PostMapping("/status/{status}")
     public Result<String> updateStatus(@PathVariable int status, @RequestParam Long[] ids) {
+        //更新了套餐，需要清理缓存
+        Set<String> keys = new HashSet<>();
+        for (Long id : ids) {
+            Setmeal setmeal = setmealService.getById(id);
+            keys.add("setmeal_" + setmeal.getCategoryId() + "_" + setmeal.getStatus());
+        }
+        redisTemplate.delete(keys);
         LambdaUpdateWrapper<Setmeal> wrapper = new LambdaUpdateWrapper<>();
         wrapper.in(Setmeal::getId, ids)
                 .set(Setmeal::getStatus, status);

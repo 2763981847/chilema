@@ -92,7 +92,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders> impleme
         orders.setUserId(userId);
         orders.setUserName(user.getName());
         orders.setNumber(String.valueOf(orderId));
-        orders.setUserName(user.getName());
+        orders.setUserName(addressBook.getConsignee());
         orders.setConsignee(addressBook.getConsignee());
         orders.setPhone(addressBook.getPhone());
         orders.setAddress((addressBook.getProvinceName() == null ? "" : addressBook.getProvinceName())

@@ -15,14 +15,15 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * <p>
@@ -42,6 +43,8 @@ public class DishController {
 
     @Resource
     private CategoryService categoryService;
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     @ApiOperation("新增菜品功能")
     @PostMapping
@@ -51,12 +54,6 @@ public class DishController {
         return Result.success("保存成功");
     }
 
-    /**
-     * @param page
-     * @param pageSize
-     * @param name
-     * @return
-     */
     @ApiOperation("分页查询功能")
     @GetMapping("/page")
     public Result<Page> queryPage(int page, int pageSize, String name) {
@@ -105,6 +102,14 @@ public class DishController {
     @PostMapping("status/{status}")
     public Result<String> updateStatus(@PathVariable int status, @RequestParam Long[] ids) {
         log.info(status == 0 ? "停售商品" : "起售商品");
+        //更新了菜品信息，需要清理缓存
+        Set<String> keys = new HashSet<>();
+        for (Long id : ids) {
+            Dish dish = dishService.getById(id);
+            keys.add("dish_" + dish.getCategoryId() + "_" + dish.getStatus());
+        }
+        redisTemplate.delete(keys);
+        //批量起售（停售）菜品
         LambdaUpdateWrapper<Dish> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.set(Dish::getStatus, status).in(Dish::getId, ids);
         dishService.update(updateWrapper);
