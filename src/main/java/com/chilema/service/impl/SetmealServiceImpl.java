@@ -12,6 +12,9 @@ import com.chilema.service.SetmealService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,13 +49,12 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
      */
     @Override
     @Transactional
+    @CacheEvict(value = "setmealCache",key = "#setmealDTO.categoryId")
     public void addWithDish(SetmealDTO setmealDTO) {
         super.save(setmealDTO);
         List<SetmealDish> setmealDishes = setmealDTO.getSetmealDishes();
         setmealDishes.forEach(setmealDish -> setmealDish.setSetmealId(String.valueOf(setmealDTO.getId())));
         setmealDishService.saveBatch(setmealDishes);
-        //新增了套餐，需要清理缓存
-        redisTemplate.delete("setmeal_" + setmealDTO.getCategoryId() + "_" + setmealDTO.getStatus());
     }
 
     /**
@@ -62,17 +64,11 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
      */
     @Override
     @Transactional
+    @CacheEvict(value = "setmealCache",allEntries = true)
     public void deleteByIds(Long[] ids) {
         if (ids == null || ids.length == 0) {
             throw new MyException("请先选择删除对象");
         }
-        //删除套餐前，需要清理缓存
-        Set<String> keys = new HashSet<>();
-        for (Long id : ids) {
-            Setmeal setmeal = super.getById(id);
-            keys.add("setmeal_" + setmeal.getCategoryId() + "_" + setmeal.getStatus());
-        }
-        redisTemplate.delete(keys);
         //先将套餐进行逻辑删除
         LambdaUpdateWrapper<Setmeal> wrapper = new LambdaUpdateWrapper<>();
         wrapper.in(Setmeal::getId, ids)
@@ -110,6 +106,7 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
      * @param setmealDTO
      */
     @Override
+    @CacheEvict(value = "setmealCache",key = "#setmealDTO.categoryId")
     public void updateWithDishes(SetmealDTO setmealDTO) {
         super.updateById(setmealDTO);
         LambdaUpdateWrapper<SetmealDish> wrapper = new LambdaUpdateWrapper<>();
@@ -119,34 +116,24 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
         List<SetmealDish> setmealDishes = setmealDTO.getSetmealDishes();
         setmealDishes.forEach(setmealDish -> setmealDish.setSetmealId(String.valueOf(setmealDTO.getId())));
         setmealDishService.saveBatch(setmealDishes);
-        //更新了菜品，需要清理缓存
-        redisTemplate.delete("setmeal_" + setmealDTO.getCategoryId() + "_" + setmealDTO.getStatus());
     }
 
     /**
      * 展示套餐列表
+     *
      * @param setmealDTO
      * @return
      */
     @Override
+    @Cacheable(value = "setmealCache", key = "#setmealDTO.categoryId")
     public List<SetmealDTO> list(SetmealDTO setmealDTO) {
-        Long categoryId = setmealDTO.getCategoryId();
-
-        //先从Redis中尝试拿到数据
-        String key = "setmeal_" + categoryId + "_" + setmealDTO.getStatus();
-        List<SetmealDTO> dtoList = (List<SetmealDTO>) (redisTemplate.opsForValue().get(key));
-        if (dtoList != null) {
-            //redis中有数据，直接返回
-            return dtoList;
-        }
-        //未从Redis中拿到数据，查询数据库
         LambdaQueryWrapper<Setmeal> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(setmealDTO.getCategoryId() != null, Setmeal::getCategoryId, setmealDTO.getCategoryId())
                 .eq(Setmeal::getStatus, 1)
                 .eq(Setmeal::getIsDeleted, 0)
                 .orderByDesc(Setmeal::getUpdateTime);
         List<Setmeal> list = super.list(wrapper);
-        dtoList = new ArrayList<>();
+        List<SetmealDTO> dtoList = new ArrayList<>();
         for (Setmeal setmeal : list) {
             SetmealDTO dto = new SetmealDTO();
             BeanUtils.copyProperties(setmeal, dto);
@@ -159,8 +146,6 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
             dto.setSetmealDishes(dishes);
             dtoList.add(dto);
         }
-        //拿到数据，存到Redis中
-        redisTemplate.opsForValue().set(key, dtoList, 60, TimeUnit.MINUTES);
         return dtoList;
     }
 }
