@@ -8,6 +8,7 @@ import com.chilema.dto.OrdersDTO;
 import com.chilema.entity.OrderDetail;
 import com.chilema.entity.Orders;
 import com.chilema.service.OrdersService;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +26,7 @@ import java.util.List;
  * @author 付秋杰
  * @since 2022-08-28
  */
+@Api("订单类Controller")
 @RestController
 @RequestMapping("/order")
 public class OrdersController {

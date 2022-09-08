@@ -35,9 +35,11 @@ public class LoginCheckFilter implements Filter {
                 "/common/**",
                 "/swagger-ui/**",
                 "/swagger-resources/**",
-                "/v3/**",
+                "/v2/**",
                 "/user/login",
-                "/user/sendMsg"
+                "/user/sendMsg",
+                "/webjars/**",
+                "/doc.html"
         };
         boolean check1 = check(uris, requestURI);
         //判断该请求是否需要拦截

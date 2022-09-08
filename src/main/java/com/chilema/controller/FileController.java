@@ -39,10 +39,6 @@ public class FileController {
     @Value("${chilema.path}")
     String basePath;
 
-    /**
-     * @param file
-     * @return
-     */
     @ApiOperation("文件上传功能")
     @PostMapping("/upload")
     public Result<String> upload(MultipartFile file) {
@@ -63,10 +59,6 @@ public class FileController {
         return Result.success(fileName);
     }
 
-    /**
-     * @param name
-     * @param response
-     */
     @ApiOperation("文件下载功能")
     @GetMapping("/download")
     public void download(String name, HttpServletResponse response) {

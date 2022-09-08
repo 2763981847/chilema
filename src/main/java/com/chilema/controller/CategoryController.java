@@ -30,10 +30,6 @@ public class CategoryController {
     @Resource
     private CategoryService categoryService;
 
-    /**
-     * @param category
-     * @return
-     */
     @ApiOperation("新增分类")
     @PostMapping
     public Result<String> addCategory(@RequestBody Category category) {
@@ -42,11 +38,6 @@ public class CategoryController {
         return Result.success("保存成功");
     }
 
-    /**
-     * @param page
-     * @param pageSize
-     * @return
-     */
     @ApiOperation("分页查询功能")
     @GetMapping("/page")
     public Result<Page> queryPage(int page, int pageSize) {
@@ -58,10 +49,6 @@ public class CategoryController {
         return Result.success(categoryPage);
     }
 
-    /**
-     * @param category
-     * @return
-     */
     @ApiOperation("套餐信息更新功能")
     @PutMapping
     public Result<String> updateCategory(@RequestBody Category category) {
@@ -70,10 +57,6 @@ public class CategoryController {
         return Result.success("保存成功");
     }
 
-    /**
-     * @param id
-     * @return
-     */
     @ApiOperation("套餐删除功能")
     @DeleteMapping
     public Result<String> deleteCategory(Long id) {
@@ -82,10 +65,6 @@ public class CategoryController {
         return Result.success("删除成功");
     }
 
-    /**
-     * @param category
-     * @return
-     */
     @ApiOperation("菜品分类查询功能")
     @GetMapping("/list")
     public Result<List<Category>> queryCategoryByType(Category category) {

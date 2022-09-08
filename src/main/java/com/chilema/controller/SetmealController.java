@@ -13,6 +13,7 @@ import com.chilema.service.CategoryService;
 import com.chilema.service.DishService;
 import com.chilema.service.SetmealDishService;
 import com.chilema.service.SetmealService;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -37,6 +38,7 @@ import java.util.Set;
  * @author 付秋杰
  * @since 2022-08-28
  */
+@Api("套餐类Controller")
 @RestController
 @RequestMapping("/setmeal")
 @Slf4j

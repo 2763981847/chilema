@@ -5,6 +5,7 @@ import com.chilema.common.BaseContext;
 import com.chilema.common.Result;
 import com.chilema.entity.ShoppingCart;
 import com.chilema.service.ShoppingCartService;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +23,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("shoppingCart")
+@Api("购物车类Controller")
 public class ShoppingCartController {
 
     @Resource

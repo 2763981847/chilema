@@ -6,6 +6,7 @@ import com.chilema.common.Result;
 import com.chilema.entity.User;
 import com.chilema.service.UserService;
 import com.chilema.utils.ValidateCodeUtils;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -30,6 +31,7 @@ import java.util.concurrent.TimeUnit;
  * @author 付秋杰
  * @since 2022-08-28
  */
+@Api("用户类Controller")
 @Slf4j
 @RestController
 @RequestMapping("user")

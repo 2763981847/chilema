@@ -37,11 +37,6 @@ public class EmployeeController {
     @Resource
     private EmployeeService employeeService;
 
-    /**
-     * @param request
-     * @param employee
-     * @return
-     */
     @ApiOperation("登录功能")
     @PostMapping("/login")
     public Result<Employee> login(HttpServletRequest request, @RequestBody Employee employee) {
@@ -68,10 +63,6 @@ public class EmployeeController {
         return Result.success(emp);
     }
 
-    /**
-     * @param request
-     * @return
-     */
     @ApiOperation("登出功能")
     @PostMapping("/logout")
     public Result<String> logout(HttpServletRequest request) {
@@ -79,11 +70,6 @@ public class EmployeeController {
         return Result.success("退出成功");
     }
 
-    /**
-     * @param session
-     * @param employee
-     * @return
-     */
     @ApiOperation("添加员工功能")
     @PostMapping
     public Result<String> addEmployee(HttpSession session, @RequestBody Employee employee) {
@@ -95,12 +81,6 @@ public class EmployeeController {
         return Result.success("保存成功");
     }
 
-    /**
-     * @param page
-     * @param pageSize
-     * @param name
-     * @return
-     */
     @ApiOperation("分页查询功能")
     @GetMapping("/page")
     public Result<Page> queryPage(int page, int pageSize, String name) {
@@ -115,11 +95,6 @@ public class EmployeeController {
         return Result.success(pageInfo);
     }
 
-    /**
-     * @param session
-     * @param employee
-     * @return
-     */
     @ApiOperation("员工禁用(启动)功能")
     @PutMapping
     public Result<String> updateEmployee(HttpSession session, @RequestBody Employee employee) {
@@ -128,10 +103,6 @@ public class EmployeeController {
         return Result.success("员工已信息修改成功");
     }
 
-    /**
-     * @param id
-     * @return
-     */
     @ApiOperation("数据回显功能")
     @GetMapping("/{id}")
     public Result<Employee> dataEcho(@PathVariable Long id) {
