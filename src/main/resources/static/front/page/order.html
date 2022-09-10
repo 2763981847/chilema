@@ -46,9 +46,6 @@
                         <div class="result">
                             <span>共{{order.sumNum}} 件商品,实付</span><span class="price">￥{{order.amount}}</span>
                         </div>
-                        <div class="btn" v-if="order.status === 4">
-                            <div class="btnAgain" @click="addOrderAgain(order)">再来一单</div>
-                        </div>
                     </van-cell>
                 </van-list>
             </div>
@@ -126,16 +123,6 @@
                             this.finished = true;
                         }
                         this.paging.page = this.paging.page + 1
-                    }else{
-                        this.$notify({ type:'warning', message:res.msg});
-                    }
-                },
-                async addOrderAgain(order){
-                    const res = await orderAgainApi({id:order.id})
-                    if(res.code === 1){
-                        window.requestAnimationFrame(()=>{
-                            window.location.href= '/front/index.html'
-                        })
                     }else{
                         this.$notify({ type:'warning', message:res.msg});
                     }

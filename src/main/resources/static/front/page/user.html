@@ -60,9 +60,6 @@
                     <span>共{{order[0].sumNum}} 件商品,实付</span>
                     <span class="price">￥{{order[0].amount}}</span>
                 </div>
-                <div class="btn" v-if="order[0].status === 4">
-                    <div class="btnAgain" @click="addOrderAgain">再来一单</div>
-                </div>
             </div>
             <div class="quitLogin" @click="toPageLogin">
                 退出登录
@@ -167,16 +164,6 @@
 
                     }
                     return str
-                },
-                async addOrderAgain(){
-                    const res = await orderAgainApi({id:this.order[0].id})
-                    if(res.code === 1){
-                        window.requestAnimationFrame(()=>{
-                            window.location.href = '/front/index.html'
-                        }) 
-                    }else{
-                        this.$notify({ type:'warning', message:res.msg});
-                    }
                 },
                 async toPageLogin(){
                     const res = await loginoutApi()

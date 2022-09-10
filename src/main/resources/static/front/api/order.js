@@ -23,12 +23,3 @@ function orderPagingApi(data) {
       params:{...data}
   })
 }
-
-//再来一单
-function orderAgainApi(data) {
-  return $axios({
-      'url': '/order/again',
-      'method': 'post',
-      data
-  })
-}
