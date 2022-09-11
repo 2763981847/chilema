@@ -66,6 +66,7 @@ public class EmployeeController {
     @ApiOperation("登出功能")
     @PostMapping("/logout")
     public Result<String> logout(HttpServletRequest request) {
+        //将session中的员工信息移除再登出
         request.getSession().removeAttribute("employee");
         return Result.success("退出成功");
     }
@@ -74,8 +75,10 @@ public class EmployeeController {
     @PostMapping
     public Result<String> addEmployee(HttpSession session, @RequestBody Employee employee) {
         log.info("新增员工的员工信息" + employee.toString());
+        //设置默认密码
         String password = DigestUtils.md5DigestAsHex("123456".getBytes(StandardCharsets.UTF_8));
         employee.setPassword(password);
+        //保存员工
         employeeService.save(employee);
         log.info("用户{}保存成功", employee.getUsername());
         return Result.success("保存成功");
@@ -87,6 +90,7 @@ public class EmployeeController {
         log.info("接收到参数：page:{},pageSize:{},name:{}", page, pageSize, name);
         Page pageInfo = new Page(page, pageSize);          //Page对象的两个参数--当前页数和页面容量
         QueryWrapper<Employee> wrapper = new QueryWrapper<>();
+        //若有根据姓名查询的条件就添加条件
         if (StringUtils.isNotEmpty(name)) {
             wrapper.like("name", name);
         }

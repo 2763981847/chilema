@@ -1,4 +1,4 @@
-//package com.chilema.utils;
+package com.chilema.utils;
 //
 //import com.aliyuncs.DefaultAcsClient;
 //import com.aliyuncs.IAcsClient;

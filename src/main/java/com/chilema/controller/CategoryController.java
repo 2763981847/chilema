@@ -42,6 +42,7 @@ public class CategoryController {
     @GetMapping("/page")
     public Result<Page> queryPage(int page, int pageSize) {
         log.info("接收到参数：page:{},pageSize:{}", page, pageSize);
+        //创建分页对象
         Page categoryPage = new Page(page, pageSize);
         LambdaQueryWrapper<Category> wrapper = new LambdaQueryWrapper<>();
         wrapper.orderByAsc(Category::getSort);
@@ -52,8 +53,8 @@ public class CategoryController {
     @ApiOperation("套餐信息更新功能")
     @PutMapping
     public Result<String> updateCategory(@RequestBody Category category) {
-        categoryService.updateById(category);
         log.info("更新的分类信息{}", category.toString());
+        categoryService.updateById(category);
         return Result.success("保存成功");
     }
 

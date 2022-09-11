@@ -41,12 +41,14 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
     /**
      * 新增菜品并将其口味存在口味表中
      *
-     * @param dishDTO
+     * @param dishDTO 菜品数据传输对象
      */
     @Transactional        //涉及到多张表的操作，需开启事务控制
     @Override
     public void addDishWithFlavors(DishDTO dishDTO) {
+        //先将菜品本身保存
         super.save(dishDTO);
+        //再将菜品关联的口味存到口味表中
         for (DishFlavor flavor : dishDTO.getFlavors()) {
             flavor.setDishId(dishDTO.getId());
             dishFlavorService.save(flavor);
@@ -58,8 +60,8 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
     /**
      * 根据id拿到对应菜品的信息和其口味
      *
-     * @param id
-     * @return
+     * @param id  菜品id
+     * @return 菜品数据传输对象
      */
     @Override
     public DishDTO getDishWithFlavorsById(Long id) {
@@ -79,7 +81,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
     /**
      * 更新菜品信息和口味
      *
-     * @param dishDTO
+     * @param dishDTO 菜品数据传输对象
      */
     @Transactional
     @Override
@@ -102,7 +104,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
     /**
      * 删除菜品及其口味
      *
-     * @param ids
+     * @param ids 要删除的菜品id数组
      */
     @Transactional
     @Override
@@ -127,8 +129,8 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
     /**
      * 根据菜品分类拿到对应菜品的信息和其口味
      *
-     * @param dishDTO
-     * @return
+     * @param dishDTO 菜品数据传输对象
+     * @return 菜品数据传输对象集合
      */
     @Override
     public List<DishDTO> list(DishDTO dishDTO) {

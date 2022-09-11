@@ -45,7 +45,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders> impleme
     /**
      * 提交订单功能
      *
-     * @param orders
+     * @param orders 用户提交的订单对象
      */
     @Override
     @Transactional
@@ -111,14 +111,18 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders> impleme
 
     /**
      * 分页展示订单功能
-     *
-     * @param page
-     * @param pageSize
-     * @return
+     * @param page   页码
+     * @param pageSize  单页数据条数
+     * @param number    订单号
+     * @param beginTime  开始时间
+     * @param endTime     结束时间
+     * @param userId  用户id
+     * @return   查询到的分页对象
      */
     @Override
     public Page queryPage(int page, int pageSize, String number, String beginTime, String endTime, Long userId) {
         Page<Orders> ordersPage = new Page<>(page, pageSize);
+        //根据用户传来的筛选条件动态添加进查询wrapper
         LambdaQueryWrapper<Orders> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(userId != null, Orders::getUserId, userId)
                 .eq(number != null, Orders::getNumber, number)
@@ -127,15 +131,18 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders> impleme
                 .orderByDesc(Orders::getOrderTime);
         super.page(ordersPage, wrapper);
         Page<OrdersDTO> dtoPage = new Page<>();
+        //将已查询到的订单信息拷贝到订单的数据传输对象
         BeanUtils.copyProperties(ordersPage, dtoPage, "records");
         List<Orders> orders = ordersPage.getRecords();
         List<OrdersDTO> dtos = new ArrayList<>();
         for (Orders order : orders) {
+            //先将records中已有的属性拷贝到dto
             OrdersDTO dto = new OrdersDTO();
             BeanUtils.copyProperties(order, dto);
             Long orderId = order.getId();
             LambdaQueryWrapper<OrderDetail> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(OrderDetail::getOrderId, orderId);
+            //计算订单总金额
             int sum = 0;
             for (OrderDetail orderDetail : orderDetailService.list(queryWrapper)) {
                 sum += orderDetail.getNumber();
@@ -147,6 +154,12 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders> impleme
         return dtoPage;
     }
 
+    /**
+     * 对完整版的分页展示订单功能进行重载，方便使用
+     * @param page 页码
+     * @param pageSize  单页数据条数
+     * @return 查询到的分页对象
+     */
     @Override
     public Page queryPage(int page, int pageSize) {
         return queryPage(page, pageSize, null, null, null, BaseContext.get());
