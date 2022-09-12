@@ -32,31 +32,14 @@ public class ShoppingCartController {
     @ApiOperation("查询用户购物车数据功能")
     @GetMapping("/list")
     public Result<List<ShoppingCart>> list() {
-        Long userId = BaseContext.get();
-        LambdaQueryWrapper<ShoppingCart> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ShoppingCart::getUserId, userId)
-                .orderByDesc(ShoppingCart::getCreateTime);
-        List<ShoppingCart> list = shoppingCartService.list(wrapper);
+        List<ShoppingCart> list = shoppingCartService.list();
         return Result.success(list);
     }
 
     @ApiOperation("添加进购物车功能")
     @PostMapping("/add")
     public Result<String> add(@RequestBody ShoppingCart shoppingCart) {
-        Long userId = BaseContext.get();
-        shoppingCart.setUserId(userId);
-        LambdaQueryWrapper<ShoppingCart> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ShoppingCart::getUserId, userId)
-                .eq(shoppingCart.getSetmealId() != null, ShoppingCart::getSetmealId, shoppingCart.getSetmealId())
-                .eq(shoppingCart.getDishId() != null, ShoppingCart::getDishId, shoppingCart.getDishId());
-        ShoppingCart one = shoppingCartService.getOne(wrapper);
-        if (one == null) {
-            shoppingCart.setCreateTime(LocalDateTime.now());
-            shoppingCartService.save(shoppingCart);
-        } else {
-            one.setNumber(one.getNumber() + 1);
-            shoppingCartService.updateById(one);
-        }
+        shoppingCartService.add(shoppingCart);
         return Result.success("添加成功");
     }
 
@@ -72,17 +55,7 @@ public class ShoppingCartController {
     @ApiOperation("从购物车中移除功能")
     @PostMapping("/sub")
     public Result<String> sub(@RequestBody ShoppingCart shoppingCart) {
-        LambdaQueryWrapper<ShoppingCart> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(shoppingCart.getDishId() != null, ShoppingCart::getDishId, shoppingCart.getDishId())
-                .eq(shoppingCart.getSetmealId() != null, ShoppingCart::getSetmealId, shoppingCart.getSetmealId())
-                .eq(ShoppingCart::getUserId, BaseContext.get());
-        ShoppingCart one = shoppingCartService.getOne(wrapper);
-        if (one.getNumber() == 1) {
-            shoppingCartService.remove(wrapper);
-        } else {
-            one.setNumber(one.getNumber() - 1);
-            shoppingCartService.updateById(one);
-        }
+        shoppingCartService.sub(shoppingCart);
         return Result.success("移除成功");
     }
 }

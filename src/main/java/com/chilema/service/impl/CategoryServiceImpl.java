@@ -30,6 +30,11 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
     @Resource
     private SetmealService setmealService;
 
+    /**
+     * 根据id删除分类功能
+     *
+     * @param id 要删除的分类id
+     */
     @Override
     public void removeById(Long id) {
         //判断该分类下是否关联有菜品

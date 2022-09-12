@@ -57,30 +57,8 @@ public class DishController {
     @ApiOperation("分页查询功能")
     @GetMapping("/page")
     public Result<Page> queryPage(int page, int pageSize, String name) {
-        log.info("接收到分页查询数据，页数：{}，单页大小：{}，查询菜品名：{}", page, pageSize, name);
-        //构建分页对象
-        Page<Dish> dishPage = new Page<>(page, pageSize);
-        Page<DishDTO> dtoPage = new Page<>();
-        //进行分页查询
-        LambdaQueryWrapper<Dish> wrapper = new LambdaQueryWrapper<>();
-        wrapper.like(StringUtils.isNotEmpty(name), Dish::getName, name)
-                .eq(Dish::getIsDeleted, 0)
-                .orderByDesc(Dish::getUpdateTime);
-        dishService.page(dishPage, wrapper);
-        //将dishPage的属性值拷贝给dtoPage
-        BeanUtils.copyProperties(dishPage, dtoPage, "records");
-        //拿dishList中的每一个的分类id到其对应的分类名并赋值给dtoList;
-        List<Dish> dishList = dishPage.getRecords();
-        List<DishDTO> dtoList = new ArrayList<>();
-        for (Dish dish : dishList) {
-            Long categoryId = dish.getCategoryId();
-            DishDTO dishDTO = new DishDTO();
-            BeanUtils.copyProperties(dish, dishDTO);
-            dishDTO.setCategoryName(categoryService.getById(categoryId).getName());
-            dtoList.add(dishDTO);
-        }
-        dtoPage.setRecords(dtoList);
-        return Result.success(dtoPage);
+        Page queryPage = dishService.queryPage(page, pageSize, name);
+        return Result.success(queryPage);
     }
 
     @ApiOperation("数据回显功能")

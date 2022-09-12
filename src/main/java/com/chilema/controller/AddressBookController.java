@@ -33,18 +33,7 @@ public class AddressBookController {
     @ApiOperation("用户新增地址功能")
     @PostMapping
     public Result<String> add(@RequestBody AddressBook addressBook) {
-        //先新增地址
-        addressBook.setUserId(BaseContext.get());
-        log.info("新增的地址信息为：{}", addressBook);
-        Long userId = addressBook.getUserId();
-        LambdaQueryWrapper<AddressBook> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(AddressBook::getUserId, userId)
-                .eq(AddressBook::getIsDeleted, 0);
-        //若用户没有其他地址，则将该地址设为默认地址
-        if (addressBookService.count(wrapper) == 0) {
-            addressBook.setIsDefault(true);
-        }
-        addressBookService.save(addressBook);
+        addressBookService.add(addressBook);
         return Result.success("新增地址成功");
     }
 
@@ -58,21 +47,7 @@ public class AddressBookController {
     @ApiOperation("地址删除功能")
     @DeleteMapping
     public Result<String> delete(@RequestParam Long ids) {
-        //构建一个更新wrapper
-        LambdaUpdateWrapper<AddressBook> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(AddressBook::getId, ids)
-                .set(AddressBook::getIsDeleted, 1)
-                .set(AddressBook::getIsDefault, false);
-        //若用户删除的是默认地址，则将剩下的一个地址设置为默认地址
-        if (getDefault().getCode() == 0) {
-            LambdaQueryWrapper<AddressBook> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(AddressBook::getUserId, BaseContext.get())
-                    .eq(AddressBook::getIsDeleted, 0);
-            AddressBook addressBook = addressBookService.getOne(queryWrapper);
-            addressBook.setIsDefault(true);
-            addressBookService.updateById(addressBook);
-        }
-        addressBookService.update(wrapper);
+        addressBookService.delete(ids);
         return Result.success("删除成功");
     }
 
@@ -105,14 +80,8 @@ public class AddressBookController {
     @ApiOperation("获取默认地址功能")
     @GetMapping("/default")
     public Result<AddressBook> getDefault() {
-        //从线程中拿到用户ID
-        Long userId = BaseContext.get();
-        LambdaQueryWrapper<AddressBook> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(AddressBook::getUserId, userId)
-                .eq(AddressBook::getIsDefault, true)
-                .eq(AddressBook::getIsDeleted, 0);
-        AddressBook addressBook = addressBookService.getOne(wrapper);
-        //没有默认地址返回错误信息
+        AddressBook addressBook = addressBookService.getDefault();
+        //没有拿到默认地址，返回错误信息
         if (addressBook == null) return Result.error("您尚未设置默认地址");
         return Result.success(addressBook);
     }

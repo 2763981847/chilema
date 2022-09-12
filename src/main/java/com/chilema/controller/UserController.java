@@ -44,50 +44,23 @@ public class UserController {
 
     @ApiOperation("获取随机验证码功能")
     @PostMapping("/sendMsg")
-    public Result<String> sendMsg(@RequestBody User user, HttpSession session) {
-        String phone = user.getPhone();
-        log.info("接收到手机号{}", phone);
-        if (StringUtils.isNotEmpty(phone)) {
-            String code = ValidateCodeUtils.generateValidateCode4String(6);
-            log.info("随机验证码为{}", code);
-            //将验证码存入Redis中
-            redisTemplate.opsForValue().set(phone, code, 5, TimeUnit.MINUTES);
-            //将验证码存入session中
-            //session.setAttribute(phone, code);
-            return Result.success("验证码获取成功");
-        }
-        throw new MyException("手机号不能为空");
+    public Result<String> sendMsg(@RequestBody User user) {
+        userService.sendMsg(user);
+        return Result.success("随机码获取成功");
     }
 
     @ApiOperation("用户登录功能")
     @PostMapping("/login")
     public Result<User> login(HttpSession session, @RequestBody Map<String, String> map) {
-        //从session中拿到验证码
-        //String code = (String) session.getAttribute(map.get("phone"));
-        //从Redis中拿到验证码
-        String code = (String) redisTemplate.opsForValue().get(map.get("phone"));
-        if (map.get("code") != null && map.get("code").equals(code)) {
-            LambdaUpdateWrapper<User> wrapper = new LambdaUpdateWrapper<>();
-            wrapper.eq(User::getPhone, map.get("phone"));
-            User user = userService.getOne(wrapper);
-            if (user == null) {
-                user = new User();
-                user.setPhone(map.get("phone"));
-                userService.save(user);
-            }
-            session.setAttribute("user", user.getId());
-            //从session中移除验证码
-            //session.removeAttribute(map.get("phone"));
-            //从Redis中移除验证码
-            redisTemplate.delete(map.get("phone"));
-            return Result.success(user);
-        }
-        return Result.error("验证码错误");
+        User user = userService.login(session, map);
+        if (user == null) return Result.error("验证码错误");
+        return Result.success(user);
     }
 
     @ApiOperation("用户登出功能")
     @PostMapping("/logout")
     public Result<String> logout(HttpSession session) {
+        //将session中的用户信息清除再登出
         session.invalidate();
         return Result.success("登出成功");
     }

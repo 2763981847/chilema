@@ -2,14 +2,20 @@ package com.chilema.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.chilema.common.MyException;
 import com.chilema.dto.SetmealDTO;
+import com.chilema.entity.Dish;
 import com.chilema.entity.Setmeal;
 import com.chilema.entity.SetmealDish;
 import com.chilema.mapper.SetmealMapper;
+import com.chilema.service.CategoryService;
+import com.chilema.service.DishService;
 import com.chilema.service.SetmealDishService;
 import com.chilema.service.SetmealService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
@@ -34,10 +40,15 @@ import java.util.concurrent.TimeUnit;
  * @author 付秋杰
  * @since 2022-08-28
  */
+@Slf4j
 @Service
 public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> implements SetmealService {
     @Resource
     private SetmealDishService setmealDishService;
+    @Resource
+    private CategoryService categoryService;
+    @Resource
+    private DishService dishService;
     @Autowired
     private RedisTemplate redisTemplate;
 
@@ -49,7 +60,7 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
      */
     @Override
     @Transactional
-    @CacheEvict(value = "setmealCache",key = "#setmealDTO.categoryId")
+    @CacheEvict(value = "setmealCache", key = "#setmealDTO.categoryId")
     public void addWithDish(SetmealDTO setmealDTO) {
         //先将套餐信息保存
         super.save(setmealDTO);
@@ -66,7 +77,7 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
      */
     @Override
     @Transactional
-    @CacheEvict(value = "setmealCache",allEntries = true)
+    @CacheEvict(value = "setmealCache", allEntries = true)
     public void deleteByIds(Long[] ids) {
         if (ids == null || ids.length == 0) {
             throw new MyException("请先选择删除对象");
@@ -111,7 +122,7 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
      * @param setmealDTO 套餐数据传输对象
      */
     @Override
-    @CacheEvict(value = "setmealCache",key = "#setmealDTO.categoryId")
+    @CacheEvict(value = "setmealCache", key = "#setmealDTO.categoryId")
     public void updateWithDishes(SetmealDTO setmealDTO) {
         //先将套餐信息进行更新
         super.updateById(setmealDTO);
@@ -157,5 +168,59 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
             dtoList.add(dto);
         }
         return dtoList;
+    }
+
+    /**
+     * 根据条件分页查询
+     *
+     * @param page     页码
+     * @param pageSize 单页数据条数
+     * @param name     套餐名
+     * @return 查询到的分页对象
+     */
+    @Override
+    public Page queryPage(int page, int pageSize, String name) {
+        log.info("接收到分页查询数据，页数：{}，单页大小：{}，查询菜品名：{}", page, pageSize, name);
+        //构建分页对象
+        Page<Setmeal> setmealPage = new Page<>(page, pageSize);
+        Page<SetmealDTO> dtoPage = new Page<>();
+        //进行分页查询
+        LambdaQueryWrapper<Setmeal> wrapper = new LambdaQueryWrapper<>();
+        wrapper.like(StringUtils.isNotEmpty(name), Setmeal::getName, name)
+                .eq(Setmeal::getIsDeleted, 0)
+                .orderByDesc(Setmeal::getUpdateTime);
+        super.page(setmealPage, wrapper);
+        //将setmealPage的属性值拷贝给dtoPage
+        BeanUtils.copyProperties(setmealPage, dtoPage, "records");
+        //拿setmealList中的每一个的分类id到其对应的分类名并赋值给dtoList;
+        List<Setmeal> setmealList = setmealPage.getRecords();
+        List<SetmealDTO> dtoList = new ArrayList<>();
+        for (Setmeal setmeal : setmealList) {
+            Long categoryId = setmeal.getCategoryId();
+            SetmealDTO setmealDTO = new SetmealDTO();
+            BeanUtils.copyProperties(setmeal, setmealDTO);
+            setmealDTO.setCategoryName(categoryService.getById(categoryId).getName());
+            dtoList.add(setmealDTO);
+        }
+        dtoPage.setRecords(dtoList);
+        return dtoPage;
+    }
+
+    /**
+     * 根据套餐id拿到其关联的菜品
+     * @param setmealId 套餐id
+     * @return 菜品列表
+     */
+    @Override
+    public List<Dish> getDishesById(Long setmealId) {
+        LambdaQueryWrapper<SetmealDish> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SetmealDish::getSetmealId, setmealId);
+        List<SetmealDish> list = setmealDishService.list(wrapper);
+        List<Dish> dishes = new ArrayList<>();
+        for (SetmealDish setmealDish : list) {
+            Dish dish = dishService.getById(setmealDish.getDishId());
+            dishes.add(dish);
+        }
+        return dishes;
     }
 }

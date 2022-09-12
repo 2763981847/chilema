@@ -1,5 +1,7 @@
 package com.chilema.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.chilema.common.Result;
 import com.chilema.dto.DishDTO;
 import com.chilema.entity.Dish;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -24,4 +26,5 @@ public interface DishService extends IService<Dish> {
     void deleteDishAndFlavors(Long[] ids);
 
     List<DishDTO> list(DishDTO dishDTO);
+    Page queryPage(int page, int pageSize, String name);
 }

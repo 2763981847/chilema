@@ -2,6 +2,9 @@ package com.chilema.service;
 
 import com.chilema.entity.ShoppingCart;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.springframework.web.bind.annotation.RequestBody;
+
+import java.util.List;
 
 /**
  * <p>
@@ -12,5 +15,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 2022-08-28
  */
 public interface ShoppingCartService extends IService<ShoppingCart> {
+    List<ShoppingCart> list();
+    void add( ShoppingCart shoppingCart);
+    void sub( ShoppingCart shoppingCart);
 
 }

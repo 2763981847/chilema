@@ -2,13 +2,17 @@ package com.chilema.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.chilema.dto.DishDTO;
 import com.chilema.entity.Dish;
 import com.chilema.entity.DishFlavor;
 import com.chilema.mapper.DishMapper;
+import com.chilema.service.CategoryService;
 import com.chilema.service.DishFlavorService;
 import com.chilema.service.DishService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -30,11 +34,14 @@ import java.util.concurrent.TimeUnit;
  * @author 付秋杰
  * @since 2022-08-28
  */
+@Slf4j
 @Service
 
 public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements DishService {
     @Resource
     private DishFlavorService dishFlavorService;
+    @Resource
+    private CategoryService categoryService;
     @Autowired
     private RedisTemplate redisTemplate;
 
@@ -60,7 +67,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
     /**
      * 根据id拿到对应菜品的信息和其口味
      *
-     * @param id  菜品id
+     * @param id 菜品id
      * @return 菜品数据传输对象
      */
     @Override
@@ -166,5 +173,40 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         //拿到数据，存到Redis中
         redisTemplate.opsForValue().set(key, dtoList, 60, TimeUnit.MINUTES);
         return dtoList;
+    }
+
+    /**
+     * 分页查询功能
+     * @param page 页码
+     * @param pageSize 单页数据条数
+     * @param name 查询菜品名
+     * @return 查询到的分页对象
+     */
+    @Override
+    public Page queryPage(int page, int pageSize, String name) {
+        log.info("接收到分页查询数据，页数：{}，单页大小：{}，查询菜品名：{}", page, pageSize, name);
+        //构建分页对象
+        Page<Dish> dishPage = new Page<>(page, pageSize);
+        Page<DishDTO> dtoPage = new Page<>();
+        //进行分页查询
+        LambdaQueryWrapper<Dish> wrapper = new LambdaQueryWrapper<>();
+        wrapper.like(StringUtils.isNotEmpty(name), Dish::getName, name)
+                .eq(Dish::getIsDeleted, 0)
+                .orderByDesc(Dish::getUpdateTime);
+        super.page(dishPage, wrapper);
+        //将dishPage的属性值拷贝给dtoPage
+        BeanUtils.copyProperties(dishPage, dtoPage, "records");
+        //拿dishList中的每一个的分类id到其对应的分类名并赋值给dtoList;
+        List<Dish> dishList = dishPage.getRecords();
+        List<DishDTO> dtoList = new ArrayList<>();
+        for (Dish dish : dishList) {
+            Long categoryId = dish.getCategoryId();
+            DishDTO dishDTO = new DishDTO();
+            BeanUtils.copyProperties(dish, dishDTO);
+            dishDTO.setCategoryName(categoryService.getById(categoryId).getName());
+            dtoList.add(dishDTO);
+        }
+        dtoPage.setRecords(dtoList);
+        return dtoPage;
     }
 }

@@ -66,30 +66,8 @@ public class SetmealController {
     @ApiOperation("分页查询功能")
     @GetMapping("/page")
     public Result<Page> queryPage(int page, int pageSize, String name) {
-        log.info("接收到分页查询数据，页数：{}，单页大小：{}，查询菜品名：{}", page, pageSize, name);
-        //构建分页对象
-        Page<Setmeal> setmealPage = new Page<>(page, pageSize);
-        Page<SetmealDTO> dtoPage = new Page<>();
-        //进行分页查询
-        LambdaQueryWrapper<Setmeal> wrapper = new LambdaQueryWrapper<>();
-        wrapper.like(StringUtils.isNotEmpty(name), Setmeal::getName, name)
-                .eq(Setmeal::getIsDeleted, 0)
-                .orderByDesc(Setmeal::getUpdateTime);
-        setmealService.page(setmealPage, wrapper);
-        //将setmealPage的属性值拷贝给dtoPage
-        BeanUtils.copyProperties(setmealPage, dtoPage, "records");
-        //拿setmealList中的每一个的分类id到其对应的分类名并赋值给dtoList;
-        List<Setmeal> setmealList = setmealPage.getRecords();
-        List<SetmealDTO> dtoList = new ArrayList<>();
-        for (Setmeal setmeal : setmealList) {
-            Long categoryId = setmeal.getCategoryId();
-            SetmealDTO setmealDTO = new SetmealDTO();
-            BeanUtils.copyProperties(setmeal, setmealDTO);
-            setmealDTO.setCategoryName(categoryService.getById(categoryId).getName());
-            dtoList.add(setmealDTO);
-        }
-        dtoPage.setRecords(dtoList);
-        return Result.success(dtoPage);
+        Page queryPage = setmealService.queryPage(page, pageSize, name);
+        return Result.success(queryPage);
     }
 
     @ApiOperation("(批量)删除套餐功能")
@@ -134,14 +112,7 @@ public class SetmealController {
     @ApiOperation("根据套餐id返回其包含的菜品功能")
     @GetMapping("/dish/{setmealId}")
     public Result<List<Dish>> getDishesById(@PathVariable Long setmealId) {
-        LambdaQueryWrapper<SetmealDish> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SetmealDish::getSetmealId, setmealId);
-        List<SetmealDish> list = setmealDishService.list(wrapper);
-        List<Dish> dishes = new ArrayList<>();
-        for (SetmealDish setmealDish : list) {
-            Dish dish = dishService.getById(setmealDish.getDishId());
-            dishes.add(dish);
-        }
+        List<Dish> dishes = setmealService.getDishesById(setmealId);
         return Result.success(dishes);
     }
 }

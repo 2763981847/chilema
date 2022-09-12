@@ -12,5 +12,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 2022-08-28
  */
 public interface AddressBookService extends IService<AddressBook> {
+    void add (AddressBook addressBook);
+    void delete(Long ids);
+    AddressBook getDefault();
 
 }
