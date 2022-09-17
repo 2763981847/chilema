@@ -44,9 +44,9 @@ public class UserController {
 
     @ApiOperation("获取随机验证码功能")
     @PostMapping("/sendMsg")
-    public Result<String> sendMsg(@RequestBody User user) {
-        userService.sendMsg(user);
-        return Result.success("随机码获取成功");
+    public Result<String> sendMsg(HttpSession session, @RequestBody User user) {
+        String code = userService.sendMsg(user);
+        return Result.success(code);
     }
 
     @ApiOperation("用户登录功能")

@@ -1,0 +1,32 @@
+server:
+  port: 8081
+spring:
+  main:
+    allow-circular-references: true
+  datasource:
+    druid:
+      url: jdbc:mysql://localhost/chilema?useUnicode=true&characterEncoding=utf-8
+      username: root
+      password: fqj15823968817
+      driver-class-name: com.mysql.cj.jdbc.Driver
+  redis:
+    host: localhost
+    port: 6379
+    database: 0
+    #password: *******
+    connect-timeout:  5000
+  cache:
+    redis:
+      time-to-live: 1800000
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl  #不打印sql日志
+  global-config:
+    db-config:
+      id-type: ASSIGN_ID
+chilema:
+  path: "/home/Oreki/image/"
+logging:
+  level:
+    root: off   #关闭项目日志输出

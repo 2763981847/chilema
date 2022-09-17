@@ -36,9 +36,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * 发送验证码功能
      *
      * @param user 要发送的用户对象
+     * @return 将验证码返回，无法真正发送短信，所以直接返回验证码
      */
     @Override
-    public void sendMsg(User user) {
+    public String sendMsg(User user) {
         String phone = user.getPhone();
         log.info("接收到手机号{}", phone);
         if (StringUtils.isNotEmpty(phone)) {
@@ -49,7 +50,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             redisTemplate.opsForValue().set(phone, code, 5, TimeUnit.MINUTES);
             //将验证码存入session中
             //session.setAttribute(phone, code);
-            return;
+            return code;
         }
         //手机号为空，抛出异常
         throw new MyException("手机号不能为空");

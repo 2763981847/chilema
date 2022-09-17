@@ -17,7 +17,7 @@ import java.util.Map;
  * @since 2022-08-28
  */
 public interface UserService extends IService<User> {
-    void sendMsg(User user);
+    String sendMsg(User user);
     User login(HttpSession session,Map<String, String> map);
 
 }
